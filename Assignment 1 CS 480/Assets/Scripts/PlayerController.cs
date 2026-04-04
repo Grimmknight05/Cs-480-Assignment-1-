@@ -11,9 +11,15 @@ public class PlayerController : MonoBehaviour
     private Rigidbody rb; //Ref to rigidbody
     private float moveX; //X Movement variable
     private float moveY; //Y Movement variable
-    public float playerSpeed = 5;//Speed of character movement Default 5
-    public TextMeshProUGUI countText; //Referance to Score UI element
+    [SerializeField] private float playerSpeed = 5;//Speed of character movement Default 5
+    [SerializeField] private TextMeshProUGUI countText; //Referance to Score UI element
+    [SerializeField] private TextMeshProUGUI winUI;//Ref to Win UI 
     private int playerPoints; //Storing score per player
+
+    public delegate void ScoreChangedDelegate(int newScore);
+    public event ScoreChangedDelegate OnScoreChanged; //Score Changed event for efficeincy
+
+
     void Start()
     {
         rb = GetComponent<Rigidbody>(); //Uses GetComponent to set rd to Rigidbody component
@@ -25,9 +31,17 @@ public class PlayerController : MonoBehaviour
         moveX = movementVector.x; // extract x from movementVector (x,y) make avalable to rest of code
         moveY = movementVector.y; // extract y from movementVector (y,x) make avalable to rest of code 
     }
+    public int getPlayerScore()
+    {
+        return playerPoints;
+    }
     void setPlayerScore()//Displays player's score on UI
     {
         countText.text = "Score: " + playerPoints.ToString();
+    }
+    public void ShowWinScreen()
+    {
+        winUI.gameObject.SetActive(true);
     }
     void OnTriggerEnter(Collider other)//execute once on trigger
     {
@@ -37,11 +51,10 @@ public class PlayerController : MonoBehaviour
             playerPoints += other.gameObject.GetComponent<PickUpDefault>().points;//chack pickups point value stored in PickUpDefault script
             print("PlayerPoints: " + playerPoints);//Debug
             setPlayerScore();// update UI
+            OnScoreChanged?.Invoke(playerPoints);//Notify listeners for score update passing playerPoints
 
         }
     }
-        
-
     void FixedUpdate()//Fixed interval update ensures physics is consistant regaurdless of framerate
     {
         //Construct movement vector3

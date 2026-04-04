@@ -3,6 +3,7 @@ using UnityEngine;
 
 public class GameController : MonoBehaviour
 {
+    //might want to have player character refrencing gamecontroller to send game won event or not circular dependacies may be a problem with this
     [SerializeField] private PlayerController playerController; //Ref to player controller
     [SerializeField] private int pointsNeededToWin = 25; //Score to win
 
@@ -13,6 +14,7 @@ public class GameController : MonoBehaviour
     void Start()
     {
         playerController.OnScoreChanged += CheckWinCondition; //Add CheckWinCondition function to list of things called when OnScoreChanged is invoked
+        playerController.OnPlayerDeath += gameLoose;
     }
 
     private void CheckWinCondition(int currentScore)
@@ -28,6 +30,16 @@ public class GameController : MonoBehaviour
         //OnGameWon?.Invoke();//Invoke subscribers on won
         playerController.ShowWinScreen();
         Time.timeScale = 0f; // Pause the game
+        Destroy(GameObject.FindGameObjectWithTag("Enemy"));
+        //Add confetti
+    }
+    private void gameLoose()
+    {
+        Debug.Log("Better luck next time");
+        Time.timeScale = 0f;
+        GameObject.FindGameObjectWithTag("Player").SetActive(false);
+        //Add explosion
+
     }
 
     // Update is called once per frame

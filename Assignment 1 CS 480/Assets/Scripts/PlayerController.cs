@@ -14,11 +14,14 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float playerSpeed = 5;//Speed of character movement Default 5
     [SerializeField] private TextMeshProUGUI countText; //Referance to Score UI element
     [SerializeField] private TextMeshProUGUI winUI;//Ref to Win UI 
+    [SerializeField] private TextMeshProUGUI deathUI;//Ref to Death UI 
     private int playerPoints; //Storing score per player
 
+    /*Events*/
     public delegate void ScoreChangedDelegate(int newScore);
     public event ScoreChangedDelegate OnScoreChanged; //Score Changed event for efficeincy
-
+    public delegate void DeathDelegate();
+    public event DeathDelegate OnPlayerDeath; //Score Changed event for efficeincy
 
     void Start()
     {
@@ -43,6 +46,10 @@ public class PlayerController : MonoBehaviour
     {
         winUI.gameObject.SetActive(true);
     }
+    public void ShowDeathScreen()
+    {
+        deathUI.gameObject.SetActive(true);
+    }
     void OnTriggerEnter(Collider other)//execute once on trigger
     {
         if(other.gameObject.CompareTag("PickUp"))//If pickup
@@ -53,6 +60,13 @@ public class PlayerController : MonoBehaviour
             setPlayerScore();// update UI
             OnScoreChanged?.Invoke(playerPoints);//Notify listeners for score update passing playerPoints
 
+        }
+        Debug.Log("test");
+        if (other.gameObject.CompareTag("Enemy"))
+        {
+            Debug.Log("Enemy touched");
+            ShowDeathScreen();
+            OnPlayerDeath?.Invoke();
         }
     }
     void FixedUpdate()//Fixed interval update ensures physics is consistant regaurdless of framerate

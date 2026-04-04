@@ -6,10 +6,11 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
+    /*Variables*/
     private Rigidbody rb; //Ref to rigidbody
     private float moveX; //X Movement variable
     private float moveY; //Y Movement variable
-
+    public float playerSpeed = 5;//Speed of character movement Default 5
     void Start()
     {
         rb = GetComponent<Rigidbody>(); //Uses GetComponent to set rd to Rigidbody component
@@ -18,7 +19,7 @@ public class PlayerController : MonoBehaviour
     {
         Vector2 movementVector = movementValue.Get<Vector2>();//Getting movement direction from movementValue param, and set it to Vector2 movementVector; (x,y)
         moveX = movementVector.x; // extract x from movementVector (x,y) make avalable to rest of code
-        moveY = movementVector.x; // extract y from movementVector (y,x) make avalable to rest of code 
+        moveY = movementVector.y; // extract y from movementVector (y,x) make avalable to rest of code 
     }
     void Update()
     {
@@ -28,7 +29,7 @@ public class PlayerController : MonoBehaviour
     {
         //Construct movement vector3
         Vector3 movement = new Vector3(moveX, 0.0f, moveY); // Asign new Vector3(x,z,y) with moveX and moveY input, and no z input
-        //
-        rb.AddForce(movement);
+        //Add force to player in cormovement
+        rb.AddForce(movement * playerSpeed);//multiply movement Vector3 by playerSpeed varible
     }
 }

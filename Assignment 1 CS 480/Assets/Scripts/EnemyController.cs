@@ -16,7 +16,7 @@ public class EnemyController : MonoBehaviour
     {
         if (player != null)
         {
-            navMeshAgent.SetDestination(player.position);//navigate to player position
+            navMeshAgent.SetDestination(player.position);//navigate to player position //add team tags and make target closest from other team
         }
     }
 }

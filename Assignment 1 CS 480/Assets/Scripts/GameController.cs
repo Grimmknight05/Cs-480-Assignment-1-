@@ -37,7 +37,7 @@ public class GameController : MonoBehaviour
     {
         Debug.Log("Better luck next time");
         Time.timeScale = 0f;
-        GameObject.FindGameObjectWithTag("Player").SetActive(false);
+        //GameObject.FindGameObjectWithTag("Player").SetActive(false);
         //Add explosion
 
     }

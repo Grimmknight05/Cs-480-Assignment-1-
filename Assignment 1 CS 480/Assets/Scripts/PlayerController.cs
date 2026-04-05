@@ -1,9 +1,11 @@
-using Unity.VisualScripting;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
-using UnityEngine.InputSystem;
+using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.UI;
+using static UnityEditor.Experimental.GraphView.GraphView;
 
 public class PlayerController : MonoBehaviour
 {
@@ -11,13 +13,21 @@ public class PlayerController : MonoBehaviour
     private Rigidbody rb; //Ref to rigidbody
     private float moveX; //X Movement variable
     private float moveY; //Y Movement variable
+    [SerializeField] private int maxInAirjumps = 1;//Extra jumps in air
+    private int jumpCharges;//air jumps left
+    [SerializeField] private float jumpForce = 5.0f;
+    [SerializeField] private float doubleJumpForce = 8.0f;
+    float jumpRayDistance = 0.6f; //Raydistance important to account for player height
+    private bool onGround = false;
+    [SerializeField] private bool canJump = true;//Default player can jump
     [SerializeField] private float playerSpeed = 5;//Speed of character movement Default 5
     [SerializeField] private TextMeshProUGUI countText; //Referance to Score UI element
     [SerializeField] private TextMeshProUGUI winUI;//Ref to Win UI 
     [SerializeField] private TextMeshProUGUI deathUI;//Ref to Death UI 
+    private LayerMask jumpable;//Jumpable layer mask
     private int playerPoints; //Storing score per player
 
-    /*Events*/
+    /*  Events  */
     public delegate void ScoreChangedDelegate(int newScore);
     public event ScoreChangedDelegate OnScoreChanged; //Score Changed event for efficeincy
     public delegate void DeathDelegate();
@@ -27,6 +37,7 @@ public class PlayerController : MonoBehaviour
     {
         rb = GetComponent<Rigidbody>(); //Uses GetComponent to set rd to Rigidbody component
         setPlayerScore();// update UI
+        jumpable = LayerMask.GetMask("Jumpable");//get layermask
     }
     void OnMove(InputValue movementValue)//On any movement?
     {
@@ -34,6 +45,61 @@ public class PlayerController : MonoBehaviour
         moveX = movementVector.x; // extract x from movementVector (x,y) make avalable to rest of code
         moveY = movementVector.y; // extract y from movementVector (y,x) make avalable to rest of code 
     }
+    void OnJump(InputValue jumpValue)//Jump input
+    {
+        if (jumpValue.isPressed)
+        {
+            jump();
+            //Debug.Log("Jump Pressed");
+        }
+    }
+
+    void jump()//call on input to jump
+    {
+        //Ground jump logic
+        if (onGround && canJump)
+        {
+            //resetAirJumps();//reset airjumps on ground
+            handleJump(jumpForce);
+            Debug.Log("Jump");
+        }
+        //Air jump logic
+        if (!onGround && canJump && jumpCharges > 0)
+        {
+            --jumpCharges;
+            handleJump(doubleJumpForce);
+            Debug.Log("DoubleJump");
+        }
+        //check if on ground and has jumpcharge  max 3  3jump charges
+        //
+
+    }
+    void checkGround()//raycast bellow player check for ground
+    {
+        onGround = Physics.Raycast(transform.position, Vector3.down, jumpRayDistance, jumpable); //(origon position, direction, length, Layer(like you cant jump on water) difined in gameobjects
+        //Debug.Log("onGround: " + onGround);
+    }
+
+    void handleJump(float jumpHight)//Takes in jump hight
+    {
+        if (rb.linearVelocity.y < 0)//resets verical velocity if player is falling, keeps upward velocity
+        {
+            rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0, rb.linearVelocity.z);
+        }
+        rb.AddForce(Vector3.up * jumpHight, ForceMode.Impulse); //impulse force
+    }
+
+    void resetAirJumps()//Reset air jumps
+    {
+        jumpCharges = maxInAirjumps;
+        Debug.Log("RESET AIR JUMP");
+    }
+
+    void setmaxInAirjumps(int jumps) //not used currently
+    {
+        maxInAirjumps = jumps;
+    }
+    /*  Handle players score  */
     public int getPlayerScore()
     {
         return playerPoints;
@@ -50,9 +116,10 @@ public class PlayerController : MonoBehaviour
     {
         deathUI.gameObject.SetActive(true);
     }
+    /*  Collision detection  */
     void OnTriggerEnter(Collider other)//execute once on trigger
     {
-        if(other.gameObject.CompareTag("PickUp"))//If pickup
+        if(other.gameObject.CompareTag("PickUp"))//If pickup collected
         {
             other.gameObject.SetActive(false); //disable pickup
             playerPoints += other.gameObject.GetComponent<PickUpDefault>().points;//chack pickups point value stored in PickUpDefault script
@@ -69,11 +136,21 @@ public class PlayerController : MonoBehaviour
             OnPlayerDeath?.Invoke();
         }
     }
+    void OnCollisionEnter(Collision collision)
+    {
+        if ((jumpable.value & (1 << collision.gameObject.layer)) > 0) //If collision layer == jumpable layer (only reset jumps on jumpable surface)
+        {
+            resetAirJumps();
+        }
+    }
+
+
     void FixedUpdate()//Fixed interval update ensures physics is consistant regaurdless of framerate
     {
         //Construct movement vector3
         Vector3 movement = new Vector3(moveX, 0.0f, moveY); // Asign new Vector3(x,z,y) with moveX and moveY input, and no z input
         //Add force to player in cormovement
         rb.AddForce(movement * playerSpeed);//multiply movement Vector3 by playerSpeed varible
+        checkGround();//check if player is on the ground
     }
 }

@@ -16,16 +16,21 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private int maxInAirjumps = 1;//Extra jumps in air
     private int jumpCharges;//air jumps left
     [SerializeField] private float jumpForce = 5.0f;
-    [SerializeField] private float doubleJumpForce = 8.0f;
+    [SerializeField] private float airJumpForce = 8.0f;
     float jumpRayDistance = 0.6f; //Raydistance important to account for player height
     private bool onGround = false;
-    [SerializeField] private bool canJump = true;//Default player can jump
+    [SerializeField] private bool canJump = true;//Default player can jump //maybe also add inair jump only
     [SerializeField] private float playerSpeed = 5;//Speed of character movement Default 5
     [SerializeField] private TextMeshProUGUI countText; //Referance to Score UI element
     [SerializeField] private TextMeshProUGUI winUI;//Ref to Win UI 
     [SerializeField] private TextMeshProUGUI deathUI;//Ref to Death UI 
     private LayerMask jumpable;//Jumpable layer mask
     private int playerPoints; //Storing score per player
+
+    /*Sound*/
+    [SerializeField] private AudioSource audioSource;//AudioSource Component Ref
+    [SerializeField] private AudioClip[] jumpSFX;//List of jumpSFX
+    [SerializeField] private AudioClip[] airJumpSFX;//List of airjumpSFX
 
     /*  Events  */
     public delegate void ScoreChangedDelegate(int newScore);
@@ -60,14 +65,16 @@ public class PlayerController : MonoBehaviour
         if (onGround && canJump)
         {
             //resetAirJumps();//reset airjumps on ground
-            handleJump(jumpForce);
+            handleJump(jumpForce);//Physics
+            playRandomSFX(jumpSFX);//Sound
             Debug.Log("Jump");
         }
         //Air jump logic
         if (!onGround && canJump && jumpCharges > 0)
         {
             --jumpCharges;
-            handleJump(doubleJumpForce);
+            handleJump(airJumpForce);//Physics
+            playRandomSFX(airJumpSFX);//Sound
             Debug.Log("DoubleJump");
         }
         //check if on ground and has jumpcharge  max 3  3jump charges
@@ -92,7 +99,7 @@ public class PlayerController : MonoBehaviour
     void resetAirJumps()//Reset air jumps
     {
         jumpCharges = maxInAirjumps;
-        Debug.Log("RESET AIR JUMP");
+        //Debug.Log("RESET AIR JUMP");
     }
 
     void setmaxInAirjumps(int jumps) //not used currently
@@ -116,13 +123,23 @@ public class PlayerController : MonoBehaviour
     {
         deathUI.gameObject.SetActive(true);
     }
+    /* Sound Helper */
+    private void playRandomSFX(AudioClip[] soundList)
+    {
+        int randomIndex = Random.Range(0, soundList.Length);
+        if (soundList.Length > 0)//make sure there is a sound to play
+        {
+            audioSource.PlayOneShot(soundList[randomIndex]);
+        }
+    }
     /*  Collision detection  */
     void OnTriggerEnter(Collider other)//execute once on trigger
     {
         if(other.gameObject.CompareTag("PickUp"))//If pickup collected
         {
-            other.gameObject.SetActive(false); //disable pickup
-            playerPoints += other.gameObject.GetComponent<PickUpDefault>().points;//chack pickups point value stored in PickUpDefault script
+            PickUpDefault pickUp = other.gameObject.GetComponent<PickUpDefault>();//Get PickUp
+            pickUp.onPickup();//call pickUp's onPickup function
+            playerPoints += pickUp.points;//check pickups point value stored in PickUpDefault script
             print("PlayerPoints: " + playerPoints);//Debug
             setPlayerScore();// update UI
             OnScoreChanged?.Invoke(playerPoints);//Notify listeners for score update passing playerPoints
@@ -143,8 +160,6 @@ public class PlayerController : MonoBehaviour
             resetAirJumps();
         }
     }
-
-
     void FixedUpdate()//Fixed interval update ensures physics is consistant regaurdless of framerate
     {
         //Construct movement vector3

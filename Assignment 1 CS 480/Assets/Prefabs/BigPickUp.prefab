@@ -72,6 +72,18 @@ PrefabInstance:
       propertyPath: points
       value: 10
       objectReference: {fileID: 0}
+    - target: {fileID: 9063300104483382578, guid: 7c574f0f73fa31542b4d4731f86b8310, type: 3}
+      propertyPath: pickUpSFX.Array.size
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 9063300104483382578, guid: 7c574f0f73fa31542b4d4731f86b8310, type: 3}
+      propertyPath: 'pickUpSFX.Array.data[0]'
+      value: 
+      objectReference: {fileID: 8300000, guid: 6b75b6252e9a23a429de87ad8e495083, type: 3}
+    - target: {fileID: 9063300104483382578, guid: 7c574f0f73fa31542b4d4731f86b8310, type: 3}
+      propertyPath: 'pickUpSFX.Array.data[1]'
+      value: 
+      objectReference: {fileID: 8300000, guid: d4723693ec7603f4f81e241f7eabf7b8, type: 3}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
